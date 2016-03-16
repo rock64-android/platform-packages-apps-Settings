@@ -80,7 +80,7 @@ public class StorageSettings extends SettingsPreferenceFragment implements Index
     private PreferenceCategory mExternalCategory;
 
     private StorageSummaryPreference mInternalSummary;
-
+    private boolean mFinish;
     @Override
     protected int getMetricsCategory() {
         return MetricsLogger.DEVICEINFO_STORAGE;
@@ -113,7 +113,7 @@ public class StorageSettings extends SettingsPreferenceFragment implements Index
     private final StorageEventListener mStorageListener = new StorageEventListener() {
         @Override
         public void onVolumeStateChanged(VolumeInfo vol, int oldState, int newState) {
-            if (isInteresting(vol)) {
+            if (isInteresting(vol)&&!mFinish) {
                 refresh();
             }
         }
@@ -213,6 +213,7 @@ public class StorageSettings extends SettingsPreferenceFragment implements Index
             args.putString(VolumeInfo.EXTRA_VOLUME_ID, VolumeInfo.ID_PRIVATE_INTERNAL);
             startFragment(this, PrivateVolumeSettings.class.getCanonicalName(),
                     -1, 0, args);
+            mFinish=true;
             finish();
         }
     }
