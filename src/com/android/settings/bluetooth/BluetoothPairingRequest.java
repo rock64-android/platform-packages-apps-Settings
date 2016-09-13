@@ -28,7 +28,8 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.text.TextUtils;
 import android.os.PowerManager;
-
+import android.os.SystemProperties;
+import android.util.Log;
 /**
  * BluetoothPairingRequest is a receiver for any Bluetooth pairing request. It
  * checks if the Bluetooth Settings is currently visible and brings up the PIN, the passkey or a
@@ -48,6 +49,21 @@ public final class BluetoothPairingRequest extends BroadcastReceiver {
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             int type = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT,
                     BluetoothDevice.ERROR);
+            Log.e("BluetoothPairingRequest", "type:"+type);
+            if (type == BluetoothDevice.PAIRING_VARIANT_PIN) {
+                String ssp = SystemProperties.get("persist.service.bdroid.ssp", "true");
+                Log.e("BluetoothPairingRequest", "ssp:"+ssp);
+                if(ssp.equals("false")){
+                    String pinCode = SystemProperties.get("persist.service.bdroid.pincode", "0000");
+                    Log.e("BluetoothPairingRequest", "PAIRING_VARIANT_PIN, pinCode[" + pinCode + "]");
+                    byte[] pinBytes = BluetoothDevice.convertPinToBytes(pinCode);
+                    if (pinBytes == null) {
+                        return;
+                    }
+                    device.setPin(pinBytes);
+                    return;
+                }
+            }
             Intent pairingIntent = new Intent();
             pairingIntent.setClass(context, BluetoothPairingDialog.class);
             pairingIntent.putExtra(BluetoothDevice.EXTRA_DEVICE, device);
