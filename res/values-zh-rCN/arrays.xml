@@ -567,5 +567,21 @@
     <item msgid="4608643045752965568">"粉红色"</item>
     <item msgid="6131821495505931173">"红色"</item>
   </string-array>
+
+  <string-array name="screenshot_delay_entries">
+        <item>15秒之后</item>
+        <item>30秒之后</item>
+        <item>1分钟之后</item>
+        <item>2分钟之后</item>
+        <item>3分钟之后</item>
+        <item>4分钟之后</item>
+        <item>5分钟之后</item>
+   </string-array>
+
+  <string-array name="screenshot_storage_location">
+        <item>内部存储</item>
+        <item>SD卡</item>
+        <item>USB存储</item>
+  </string-array>
     <!-- no translation found for usb_configuration_titles:0 (292902998500371970) -->
 </resources>
