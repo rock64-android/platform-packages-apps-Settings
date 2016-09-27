@@ -62,6 +62,7 @@ abstract public class ZenModeSettingsBase extends RestrictedSettingsFragment {
     @Override
     public void onResume() {
         super.onResume();
+		NotificationManager.from(mContext).updateZenModeConfig();
         updateZenMode(true /*fireChanged*/);
         updateZenModeConfig(true /*fireChanged*/);
         mSettingsObserver.register();
