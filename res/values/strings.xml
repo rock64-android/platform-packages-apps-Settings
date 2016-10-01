@@ -7023,7 +7023,8 @@
     <!-- $_rbox_$_modify_$_zhengyang: added for screen settings -->
     <!-- Screen settings -->
     <!-- Screen settings screen, section header for settings related to display output screen-->
-    <string name="hdmi">HDMI</string><string name="hdmi_screen_zoom">Screen Zoom</string>
+    <string name="hdmi">HDMI</string>
+    <string name="hdmi_screen_zoom">Screen Zoom</string>
     <string name="hdmi_title">Turn on HDMI</string>
     <string name="hdmi_resolution_title">HDMI Resolution</string>
     <string name="hdmi_lcd_timeout">Screen Timeout</string>
@@ -7031,7 +7032,21 @@
     <string name="hdmi_connect">HDMI is connected.</string>
     <string name="hdmi_disconnect">HDMI is disconnected.</string>
 	
-	
+    <!-- HDMI1 setting-->
+    <string name="hdmi_one">HDMI1</string>
+    <string name="hdmi_screen_zoom_one">Screen Zoom</string>
+    <string name="hdmi_title_one">Turn on HDMI1</string>
+    <string name="hdmi_resolution_title_one">HDMI1 Resolution</string>
+    <string name="hdmi_lcd_timeout_one">Screen Timeout</string>
+    <string name="hdmi_settings_one">HDMI1</string>
+    <string name="hdmi_connect_one">HDMI1 is connected.</string>
+    <string name="hdmi_disconnect_one">HDMI1 is disconnected.</string>
+    
+    
+ 	<!-- DisplayOutput setting-->
+    <string name="display_output">Display Output</string>
+	<string name="dp">DP</string>
+	 
     <string name="screen_settings">Screen</string>
     <string name="screen_interface">Output Interface</string>
     <string name="screen_iface_lcd_title">LCD</string>
@@ -7195,4 +7210,6 @@
      <string name="str_exit">Exit</string>    
      <string name="battery_percentage_title">Battery Percentage</string>
      <string name="cabc_setting">Content Adaptive Brightness Control</string>    
+     <string name="resolution">Resolution</string>
+     <string name="double_display_different_content">Display different content for double screen</string>    
 </resources>

@@ -157,12 +157,27 @@
             <intent android:action="com.android.settings.MANUFACTURER_APPLICATION_SETTING" />
         </dashboard-tile>
 		
-        <dashboard-tile
+        <!-- HDMI Setting -->
+      <!--   <dashboard-tile
                 android:id="@+id/hdmi_settings"
                 android:title="@string/hdmi"
                 android:fragment="com.android.settings.HdmiSettings"
+                android:icon="@drawable/ic_settings_hdmi" /> -->
+        <!-- HDMI1 Setting -->
+      <!--   <dashboard-tile
+                android:id="@+id/hdmi_settings_one"
+                android:title="@string/hdmi_one"
+                android:fragment="com.android.settings.HdmiSettingsOne"
+                android:icon="@drawable/ic_settings_hdmi" /> -->
+        
+        <!-- DisplayOutput Setting -->
+        <dashboard-tile
+                android:id="@+id/display_output_setting"
+                android:title="@string/display_output"
+                android:fragment="com.android.settings.DisplayOutputSetting"
                 android:icon="@drawable/ic_settings_hdmi" />
-
+        
+        <!-- ScreenShorting -->
         <dashboard-tile
             android:id="@+id/screenshot_settings"
             android:title="@string/screenshot_manager"

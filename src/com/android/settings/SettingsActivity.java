@@ -147,7 +147,7 @@ public class SettingsActivity extends Activity
         SearchView.OnQueryTextListener, SearchView.OnCloseListener,
         MenuItem.OnActionExpandListener {
 
-    private static final String LOG_TAG = "Settings";
+    private static final String LOG_TAG = "SettingsActivity";
 
     // Constants for state save/restore
     private static final String SAVE_KEY_CATEGORIES = ":settings:categories";
@@ -286,7 +286,9 @@ public class SettingsActivity extends Activity
             R.id.home_settings,
             R.id.dashboard,
             R.id.screenshot_settings,
-            R.id.hdmi_settings
+            //R.id.hdmi_settings,
+            //R.id.hdmi_settings_one,
+            R.id.display_output_setting
     };
 
     private static final String[] ENTRY_FRAGMENTS = {
@@ -363,7 +365,7 @@ public class SettingsActivity extends Activity
             DrawOverlayDetails.class.getName(),
             WriteSettingsDetails.class.getName(),
             ScreenshotSetting.class.getName(),
-            HdmiSettings.class.getName()
+            DisplayOutputSetting.class.getName()
     };
 
 
@@ -450,7 +452,8 @@ public class SettingsActivity extends Activity
     @Override
     public boolean onPreferenceStartFragment(PreferenceFragment caller, Preference pref) {
         // Override the fragment title for Wallpaper settings
-        int titleRes = pref.getTitleRes();
+        Log.i(LOG_TAG, "onPreferenceStartFragment");
+    	int titleRes = pref.getTitleRes();
         if (pref.getFragment().equals(WallpaperTypeSettings.class.getName())) {
             titleRes = R.string.wallpaper_settings_fragment_title;
         } else if (pref.getFragment().equals(OwnerInfoSettings.class.getName())
@@ -579,6 +582,7 @@ public class SettingsActivity extends Activity
 
         // If this is a sub settings, then apply the SubSettings Theme for the ActionBar content insets
         if (isSubSettings) {
+        	Log.i(LOG_TAG, "isSubSetting is true");
             // Check also that we are not a Theme Dialog as we don't want to override them
             final int themeResId = getThemeResId();
             if (themeResId != R.style.Theme_DialogWhenLarge &&
@@ -722,6 +726,7 @@ public class SettingsActivity extends Activity
 
     private void setTitleFromIntent(Intent intent) {
         final int initialTitleResId = intent.getIntExtra(EXTRA_SHOW_FRAGMENT_TITLE_RESID, -1);
+        Log.i(LOG_TAG, "setTitleFromIntent->initialTitleResId:" + initialTitleResId);
         if (initialTitleResId > 0) {
             mInitialTitle = null;
             mInitialTitleResId = initialTitleResId;
@@ -745,6 +750,7 @@ public class SettingsActivity extends Activity
         } else {
             mInitialTitleResId = -1;
             final String initialTitle = intent.getStringExtra(EXTRA_SHOW_FRAGMENT_TITLE);
+            Log.i(LOG_TAG, "setTitleFromIntent->initialTitle:" + initialTitleResId);
             mInitialTitle = (initialTitle != null) ? initialTitle : getTitle();
             setTitle(mInitialTitle);
         }
@@ -935,7 +941,13 @@ public class SettingsActivity extends Activity
      */
     public void startPreferencePanel(String fragmentClass, Bundle args, int titleRes,
             CharSequence titleText, Fragment resultTo, int resultRequestCode) {
-        String title = null;
+        Log.i(LOG_TAG, "startPreferencePanel->fragmentClass:" + fragmentClass);
+        Log.i(LOG_TAG, "startPreferencePanel->args:" + args);
+        Log.i(LOG_TAG, "startPreferencePanel->titleRes:" + titleRes);
+        Log.i(LOG_TAG, "startPreferencePanel->titleText:" + titleText);
+        Log.i(LOG_TAG, "startPreferencePanel->resultTo:" + resultTo);
+        Log.i(LOG_TAG, "startPreferencePanel->resultRequestCode:" + resultRequestCode);
+    	String title = null;
         if (titleRes < 0) {
             if (titleText != null) {
                 title = titleText.toString();
@@ -944,6 +956,9 @@ public class SettingsActivity extends Activity
                 title = "";
             }
         }
+        //GaoFei Add, Fix 
+        if(!TextUtils.isEmpty(titleText) && title == null)
+        	title = titleText.toString();
         Utils.startWithFragment(this, fragmentClass, args, resultTo, resultRequestCode,
                 titleRes, title, mIsShortcut);
     }
@@ -1027,7 +1042,10 @@ public class SettingsActivity extends Activity
      */
     private Fragment switchToFragment(String fragmentName, Bundle args, boolean validate,
             boolean addToBackStack, int titleResId, CharSequence title, boolean withTransition) {
-        if (validate && !isValidFragment(fragmentName)) {
+        
+    	Log.i(LOG_TAG, "switchToFragment->titleResId:" + titleResId);
+    	Log.i(LOG_TAG, "switchToFragment->title:" + title);
+    	if (validate && !isValidFragment(fragmentName)) {
             throw new IllegalArgumentException("Invalid fragment for this activity: "
                     + fragmentName);
         }
@@ -1309,11 +1327,11 @@ public class SettingsActivity extends Activity
                             UserManager.DISALLOW_DEBUGGING_FEATURES)) {
                         removeTile = true;
                     }
-                }else if(id ==R.id.hdmi_settings){ 
+                }/*else if(id ==R.id.hdmi_settings){ 
                     if (SystemProperties.get("ro.rk.hdmi_enable", "true").equals("false")){ 
                         removeTile = true; 
                     }
-		}else if(id ==R.id.screenshot_settings){
+		}*/		else if(id ==R.id.screenshot_settings){
                     if (SystemProperties.get("ro.rk.screenshot_enable", "true").equals("false")){
                         removeTile = true;
                      }

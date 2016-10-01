@@ -49,10 +49,15 @@ import android.database.ContentObserver;
 import android.os.RemoteException;
 import android.os.DisplayOutputManager;
 
-public class HdmiSettings extends SettingsPreferenceFragment
+/**
+ * 
+ * @author GaoFei
+ * Hdmi1 Setting Fragment
+ */
+public class HdmiSettingsOne extends SettingsPreferenceFragment
 		implements OnPreferenceChangeListener,SwitchBar.OnSwitchChangeListener {
 	/** Called when the activity is first created. */
-	private static final String TAG = "HdmiSettings";
+	private static final String TAG = "HdmiSettingsOne";
 	private static final String KEY_HDMI_RESOLUTION = "hdmi_resolution";
 	private static final String KEY_HDMI_LCD = "hdmi_lcd_timeout";
 	private static final String KEY_HDMI_SCALE="hdmi_screen_zoom";
@@ -93,8 +98,8 @@ public class HdmiSettings extends SettingsPreferenceFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		context = getActivity();
-		Log.i(TAG, "HdmiSettings->getActivity():" + context.getClass().getName());
 		sharedPreferences = getActivity().getSharedPreferences("HdmiSettings",
 				Context.MODE_PRIVATE);
 		String enable = sharedPreferences.getString("enable", "1");
@@ -137,10 +142,11 @@ public class HdmiSettings extends SettingsPreferenceFragment
 		// TODO Auto-generated method stub
 		super.onActivityCreated(savedInstanceState);
 		final SettingsActivity activity = (SettingsActivity) getActivity();
-	    //mSwitchBar = activity.getSwitchBar();
-	    //mSwitchBar.show();
-	    //mSwitchBar.addOnSwitchChangeListener(this);
-	    //mSwitchBar.setChecked(sharedPreferences.getString("enable", "1").equals("1"));
+	    mSwitchBar = activity.getSwitchBar();
+	    mSwitchBar.show();
+	    mSwitchBar.addOnSwitchChangeListener(this);
+	    mSwitchBar.setChecked(sharedPreferences.getString("enable", "1").equals("1"));
+	    
 	    String resolutionValue=sharedPreferences.getString("resolution", "1280x720p-60");
 	    Log.d(TAG,"onActivityCreated resolutionValue="+resolutionValue);
 	   // context.registerReceiver(hdmiReceiver, new IntentFilter("android.intent.action.HDMI_PLUG"));
@@ -217,9 +223,9 @@ public class HdmiSettings extends SettingsPreferenceFragment
 	private void initDualMode() {
 		int dualMode=sharedPreferences.getInt("dual_mode", 0);
 		if(dualMode==0){
-			HdmiSettings.this.getPreferenceScreen().removePreference(mHdmiLcd);
+			HdmiSettingsOne.this.getPreferenceScreen().removePreference(mHdmiLcd);
 		}else{
-			mHdmiLcd.setOnPreferenceChangeListener(HdmiSettings.this);
+			mHdmiLcd.setOnPreferenceChangeListener(HdmiSettingsOne.this);
 			ContentResolver resolver = context.getContentResolver();
 			long lcdTimeout = -1;
 			if ((lcdTimeout = Settings.System.getLong(resolver,
@@ -465,6 +471,7 @@ public class HdmiSettings extends SettingsPreferenceFragment
 		
 		@Override
 		protected void onPostExecute(String result) {
+			// TODO Auto-generated method stub
 			if(result.equals(HDMI_CONNECTED)){
 				HdmiModeTask hdmiModeTask=new HdmiModeTask();
 				hdmiModeTask.execute("getmodes");

@@ -517,7 +517,7 @@
         </activity>
 
         <provider android:name=".pppoe.PppoeAccountsContentProvider"
-                android:authorities="pppoe" />
+                android:authorities="pppoe1" />
 <!--$_rbox_$_modify_$_end-->
  
         <activity android:name="Settings$WifiP2pSettingsActivity"
@@ -2528,7 +2528,7 @@
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.android.settings.files"
+            android:authorities="com.android.settings.files2"
             android:grantUriPermissions="true"
             android:exported="false">
             <meta-data
@@ -2586,7 +2586,7 @@
 
         <provider
             android:name=".search.SettingsSearchIndexablesProvider"
-            android:authorities="com.android.settings"
+            android:authorities="com.android.settings3"
             android:multiprocess="false"
             android:grantUriPermissions="true"
             android:permission="android.permission.READ_SEARCH_INDEXABLES"
@@ -2661,7 +2661,7 @@
         </activity>
 
 		<!-- HDMI -->
-        <activity android:name="Settings$HdmiSettingsActivity"
+      <!--   <activity android:name="Settings$HdmiSettingsActivity"
                 android:label="@string/hdmi"
                 android:taskAffinity="">
             <intent-filter>
@@ -2676,7 +2676,7 @@
                 android:resource="@id/hdmi_settings" />
             <meta-data android:name="com.android.settings.PRIMARY_PROFILE_CONTROLLED"
                 android:value="true" />
-        </activity>
+        </activity> -->
         
         <receiver android:name="HdmiReceiver">
             <intent-filter android:priority="1000">

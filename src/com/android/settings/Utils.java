@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
 import android.content.pm.IntentFilterVerificationInfo;
@@ -104,7 +105,7 @@ import java.util.Locale;
 import static android.content.Intent.EXTRA_USER;
 
 public final class Utils {
-    private static final String TAG = "Settings";
+    private static final String TAG = "Utils";
 
     /**
      * Set the preference's title to the matching activity's label.
@@ -655,6 +656,7 @@ public final class Utils {
     public static void startWithFragment(Context context, String fragmentName, Bundle args,
             Fragment resultTo, int resultRequestCode, int titleResId,
             CharSequence title, boolean isShortcut) {
+    	Log.i(TAG, "startWithFragment");
         Intent intent = onBuildStartFragmentIntent(context, fragmentName, args,
                 null /* titleResPackageName */, titleResId, title, isShortcut);
         if (resultTo == null) {
@@ -715,6 +717,7 @@ public final class Utils {
     public static Intent onBuildStartFragmentIntent(Context context, String fragmentName,
             Bundle args, String titleResPackageName, int titleResId, CharSequence title,
             boolean isShortcut) {
+    	Log.i(TAG, "onBuildStartFragmentIntent");
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setClass(context, SubSettings.class);
         intent.putExtra(SettingsActivity.EXTRA_SHOW_FRAGMENT, fragmentName);
@@ -1244,6 +1247,18 @@ public final class Utils {
             Log.e(TAG, "Unable to acquire UserManager");
             return UserHandle.myUserId();
         }
+    }
+    
+    public static void saveValueToSharedPreference(Context context, String key, String value){
+    	SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
+    	SharedPreferences.Editor editor = sharedPreferences.edit();
+    	editor.putString(key, value);
+    	editor.commit();
+    }
+    
+    public static String getValueFromSharedPreference(Context context, String key){
+    	SharedPreferences sharedPreferences = context.getApplicationContext().getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
+    	return sharedPreferences.getString(key, "");
     }
 }
 

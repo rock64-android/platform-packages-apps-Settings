@@ -313,10 +313,10 @@ public class KeyboardLayoutDialogFragment extends DialogFragment
         public Keyboards loadInBackground() {
             Keyboards keyboards = new Keyboards();
             InputManager im = (InputManager)getContext().getSystemService(Context.INPUT_SERVICE);
-            String[] keyboardLayoutDescriptors = im.getEnabledKeyboardLayoutsForInputDevice(
+            KeyboardLayout[] keyboardLayouts = im.getKeyboardLayoutsForInputDevice(
                     mInputDeviceIdentifier);
-            for (String keyboardLayoutDescriptor : keyboardLayoutDescriptors) {
-                KeyboardLayout keyboardLayout = im.getKeyboardLayout(keyboardLayoutDescriptor);
+            for (KeyboardLayout keyboardLayout : keyboardLayouts) {
+               // KeyboardLayout keyboardLayout = im.getKeyboardLayout(keyboardLayoutDescriptor);
                 if (keyboardLayout != null) {
                     keyboards.keyboardLayouts.add(keyboardLayout);
                 }

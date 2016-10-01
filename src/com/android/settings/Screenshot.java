@@ -6,6 +6,7 @@ import java.util.TimerTask;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -20,6 +21,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.TextView;
 
 public class Screenshot extends Application {
+	private static Screenshot instance;
     private int mDelayTime;
     private TextView text;
     private WindowManager mWindowManager;
@@ -51,12 +53,12 @@ public class Screenshot extends Application {
 
     @Override
     public void onCreate() {
-        // TODO Auto-generated method stub
         super.onCreate();
         init();
     }
 
     private void init() {
+    	instance = this;
         mContext = this.getApplicationContext();
         text = new MyView(mContext);
         text.setLayoutParams(new LayoutParams(40, 40));
@@ -105,5 +107,35 @@ public class Screenshot extends Application {
             canvas.drawText(String.valueOf(mDelayTime), 0, 40, paint);
             super.onDraw(canvas);
         }
+    }
+    
+    
+    public static Screenshot getAppInstance(){
+    	return instance;
+    }
+    
+    
+    /**
+     * ��ֵд����SharedPreference
+     * @param key
+     * @param value
+     */
+    public void saveValueToPreference(String key, String value){
+    	SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+    	SharedPreferences.Editor editor = sharedPreferences.edit();
+    	editor.putString(key, value);
+    	editor.commit();
+    }
+    
+    
+    /**
+     * ��SharedPreference��ȡֵ
+     * @param key
+     * @return
+     */
+    public String getValueFromPreference(String key){
+    	String value = "";
+    	value = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(key, "");
+    	return value;
     }
 }

@@ -3054,4 +3054,9 @@
      <string name="pppoe_accounts">账户</string>
      <string name="battery_percentage_title">电池百分比</string>
      <string name="cabc_setting">内容适应背光</string>
+     <string name="resolution">分辨率</string>
+ 	<!-- DisplayOutput setting-->
+     <string name="display_output">显示输出</string>
+	 <string name="dp">DP</string>
+	 <string name="double_display_different_content">双屏异显</string>  
 </resources>
