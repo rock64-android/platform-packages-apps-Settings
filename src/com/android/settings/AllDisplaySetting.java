@@ -1,6 +1,8 @@
 
 package com.android.settings;
 import com.android.internal.logging.MetricsLogger;
+
+import android.text.TextUtils;
 import android.util.Log;
 import static android.provider.Settings.System.SCREEN_OFF_TIMEOUT;
 import java.io.BufferedReader;
@@ -67,7 +69,7 @@ public class AllDisplaySetting extends SettingsPreferenceFragment
 
 	private ListPreference mHdmiResolution;
 	private ListPreference mHdmiLcd;
-	private Preference mHdmiScale;
+	private HdmiScreenZoomPreference mScreenZoomPreference;
 	private File HdmiDisplayModes=null;
 	private Context context;
 	private static final int DEF_HDMI_LCD_TIMEOUT_VALUE = 10;
@@ -79,6 +81,10 @@ public class AllDisplaySetting extends SettingsPreferenceFragment
 	 * 显示类型 HDMI,DP,VGA等
 	 */
 	public static final String EXTRA_BUNDLE_DISPLAY_TYPE = "extra_bundle_display_type";
+	/**
+	 * 显示标志(主屏或者次屏)
+	 */
+	public static final String EXTRAL_DISPLAY_FLAG = "extra_display_flage";
 	/**
 	 * 显示配置的目录
 	 */
@@ -99,11 +105,19 @@ public class AllDisplaySetting extends SettingsPreferenceFragment
 	 * enable文件
 	 */
 	public static final String ENABLE = "enable";
+	/**
+	 * property文件
+	 */
+	public static final String PROPERTY = "property";
 	
 	/**
 	 * 显示类型
 	 */
 	private String mDisplayType;
+	/**
+	 * 主副屏标记
+	 */
+	private int mDisplayFlag;
 	/**
 	 * 显示管理
 	 */
@@ -300,12 +314,15 @@ public class AllDisplaySetting extends SettingsPreferenceFragment
 		mHdmiLcd = (ListPreference) findPreference(KEY_HDMI_LCD);
 		mHdmiResolution = (ListPreference) findPreference(KEY_HDMI_RESOLUTION);
 		mHdmiResolution.setOnPreferenceChangeListener(this);
-		mHdmiScale = findPreference(KEY_HDMI_SCALE);
+	    mScreenZoomPreference = (HdmiScreenZoomPreference)findPreference(KEY_HDMI_SCALE);
 		Log.d(TAG,"onCreate---------------------");
 		//获取显示类型
 		mDisplayType = getArguments().getString(AllDisplaySetting.EXTRA_BUNDLE_DISPLAY_TYPE);
+		//获取显示标记
+		mDisplayFlag = getArguments().getInt(AllDisplaySetting.EXTRAL_DISPLAY_FLAG);
 		//设置Resolution Title
 		mHdmiResolution.setTitle(mDisplayType +  " " + getString(R.string.resolution));
+		mScreenZoomPreference.setDisplayFlag(mDisplayFlag);
 		Log.i(TAG, "initData->mDisplayType:" + mDisplayType);
 		//initDualMode();
 		//HdmiIsConnectTask task=new HdmiIsConnectTask();
@@ -325,20 +342,30 @@ public class AllDisplaySetting extends SettingsPreferenceFragment
 	public void refreshViewAndData(){
 		File enableFile = new File(DISPLAY_DIR + "/" + mDisplayType + "/" + ENABLE);
 		File connectFile = new File(DISPLAY_DIR + "/" + mDisplayType + "/" +  CONNECT);
+		File modeFile = new File(DISPLAY_DIR + "/" + mDisplayType + "/" + MODE);
+		//File propertyFile = new File(DISPLAY_DIR + "/" + mDisplayType + "/" + PROPERTY);
 		try{
 			BufferedReader enableBufferedReader = new BufferedReader(new FileReader(enableFile));
 			BufferedReader connectBufferedReader = new BufferedReader(new FileReader(connectFile));
+			//BufferedReader propertyBufferedReader = new BufferedReader(new FileReader(propertyFile));
 			String enableStr = enableBufferedReader.readLine();
 			String connectStr = connectBufferedReader.readLine();
+			//String propertyStr =  propertyBufferedReader.readLine();
 			if("1".equals(enableStr) && "1".equals(connectStr)){
 				mHdmiResolution.setEnabled(true);
-				mHdmiScale.setEnabled(true);
+				mScreenZoomPreference.setEnabled(true);
 				mHdmiLcd.setEnabled(true);
 			}else{
 				mHdmiResolution.setEnabled(false);
-				mHdmiScale.setEnabled(false);
+				mScreenZoomPreference.setEnabled(false);
 				mHdmiLcd.setEnabled(false);
 			}
+			
+		   /*if("0".equals(propertyStr)){
+				mHdmiResolution.setTitle(mHdmiResolution.getTitle().toString() + "(" +  ")");
+			}else{
+				mHdmiResolution.setTitle(mHdmiResolution.getTitle().toString() + "(" + ")");
+			}*/
 			enableBufferedReader.close();
 			enableBufferedReader = null;
 			connectBufferedReader.close();
@@ -351,6 +378,17 @@ public class AllDisplaySetting extends SettingsPreferenceFragment
 		if(modes != null && modes.length > 0){
 			mHdmiResolution.setEntries(modes);
 			mHdmiResolution.setEntryValues(modes);
+		}
+		
+		try{
+			BufferedReader modeBufferedReader = new BufferedReader(new FileReader(modeFile));
+			String modeStr = modeBufferedReader.readLine();
+			if(!TextUtils.isEmpty(modeStr))
+				mHdmiResolution.setValue(modeStr);
+			modeBufferedReader.close();
+			modeBufferedReader = null;
+		}catch (Exception e){
+			
 		}
 	}
 	

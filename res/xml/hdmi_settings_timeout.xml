@@ -17,7 +17,6 @@
 		<ListPreference
 		  android:key="hdmi_resolution"	
           android:title="@string/hdmi_resolution_title"
-          android:persistent="true"
           android:entries="@array/hdmi_resolution_entries"
           android:entryValues="@array/hdmi_resolution_values"
           android:defaultValue="2"/>

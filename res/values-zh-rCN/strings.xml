@@ -3058,5 +3058,7 @@
  	<!-- DisplayOutput setting-->
      <string name="display_output">显示输出</string>
 	 <string name="dp">DP</string>
-	 <string name="double_display_different_content">双屏异显</string>  
+	 <string name="double_display_different_content">双屏异显</string>
+	 <string name="primary">主</string>
+     <string name="second">次</string>      
 </resources>

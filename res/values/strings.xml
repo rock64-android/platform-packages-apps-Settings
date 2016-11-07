@@ -7211,5 +7211,7 @@
      <string name="battery_percentage_title">Battery Percentage</string>
      <string name="cabc_setting">Content Adaptive Brightness Control</string>    
      <string name="resolution">Resolution</string>
-     <string name="double_display_different_content">Display different content for double screen</string>    
+     <string name="double_display_different_content">Display different content for double screen</string>
+     <string name="primary">Primary</string>
+     <string name="second">Second</string>    
 </resources>

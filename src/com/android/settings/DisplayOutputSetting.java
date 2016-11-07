@@ -5,6 +5,7 @@ package com.android.settings;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.Scanner;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -59,6 +60,11 @@ public class DisplayOutputSetting extends SettingsPreferenceFragment {
 	 * observer for double screen flag
 	 */
 	private DoubleScreenObserver mDoubleObserver;
+	
+	/**
+	 * property文件
+	 */
+	public static final String PROPERTY = "property";
 	
 	@Override
 	protected int getMetricsCategory() {
@@ -147,12 +153,24 @@ public class DisplayOutputSetting extends SettingsPreferenceFragment {
 				bundle.putString(AllDisplaySetting.EXTRA_BUNDLE_DISPLAY_TYPE, displayType);
 				//bundle.putString(key, value)
 				displayPreference.setFragment("com.android.settings.AllDisplaySetting");
+				try{
+					File propertyFile = new File(DISPLAY_TYPE_DIR + "/" + displayType + "/" + PROPERTY);
+					Scanner scanner = new Scanner(propertyFile);
+					int property = scanner.nextInt();
+					Log.i(TAG, "buildPreferenceScreen->property:" + property);
+					//获取主屏，还是次屏
+					String displayFlag = property == 0? getString(R.string.primary): getString(R.string.second);
+					displayPreference.setTitle(displayPreference.getTitle().toString() + "(" + displayFlag + ")");
+					bundle.putInt(AllDisplaySetting.EXTRAL_DISPLAY_FLAG, property);
+				}catch(Exception e){
+					Log.i(TAG, "read property error:" + e);
+				}
 				mRootPreferenceScreen.addPreference(displayPreference);
 			}
 		}
 		
 		
-		for(int i = 0; i < mRootPreferenceScreen.getPreferenceCount(); ++i){
+		for(int i = 1; i < mRootPreferenceScreen.getPreferenceCount(); ++i){
 			Preference preference = mRootPreferenceScreen.getPreference(i);
 			String preferenceKey = preference.getKey();
 			File enableFile = new File(DISPLAY_TYPE_DIR + "/" + preferenceKey + "/enable");

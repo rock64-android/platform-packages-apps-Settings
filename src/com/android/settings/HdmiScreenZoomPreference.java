@@ -19,6 +19,7 @@ package com.android.settings;
 import android.util.Log;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.os.RemoteException;
 import android.os.IPowerManager;
 import android.os.ServiceManager;
@@ -46,34 +47,35 @@ import android.os.DisplayOutputManager;
 import android.graphics.Rect;
 
 public class HdmiScreenZoomPreference extends SeekBarDialogPreference implements
-		SeekBar.OnSeekBarChangeListener, CheckBox.OnCheckedChangeListener {
+		SeekBar.OnSeekBarChangeListener {
 
 	private static final String TAG = "HdmiScreenZoomPreference";
 	private static final int MINIMUN_SCREEN_SCALE = 0;
 	private static final int MAXIMUN_SCREEN_SCALE = 20;
-
-	private File HdmiScale; 
-	private File DualModeFile = new File("/sys/class/graphics/fb0/dual_mode");
 	private SeekBar mSeekBar;
 	private int mOldScale = 0;
 	private int mValue = 0;
-	private int mRestoreValue = 0;
-	private boolean mFlag = false;
 	// for save hdmi config
 	private Context context;
-	private final File HdmiState = new File("sys/class/display/HDMI/connect");
-	private int dualMode;
 	private SharedPreferences preferences;
 	private DisplayOutputManager mDisplayManagement = null;
-
+	private HdmiScaleTask mScaleTask;
+	/**
+	 *之前的OverScan
+	 */
+	private Rect mOldOverScan;
+	/**
+	 * 显示标记，表示主屏或副屏
+	 */
+	private int mDisplayFlag;
 	public HdmiScreenZoomPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		Log.i(TAG, "HdmiScreenZoomPreference->context:" + context.getClass().getName());
 		this.context = context;
 		setDialogLayoutResource(R.layout.preference_dialog_screen_scale);
 		setDialogIcon(R.drawable.ic_settings_screen_scale);
 		preferences = context.getSharedPreferences(
 				"HdmiSettings", context.MODE_PRIVATE);
-		dualMode=preferences.getInt("dual_mode", 0);
 		try {
 			mDisplayManagement = new DisplayOutputManager();
 		}catch (RemoteException doe) {
@@ -85,80 +87,34 @@ public class HdmiScreenZoomPreference extends SeekBarDialogPreference implements
 			mDisplayManagement = null;		
 	}
 
-	protected void setHdmiScreenScale(File file, int value) {
-		//if (mDisplayManagement == null || value < 0){
-			//if (!isHdmiConnected(HdmiState)) {
-			//	return;
-			//}
-			// if (dualMode == 1) {
-				// SystemProperties.set("sys.hdmi_screen.scale",
-						// String.valueOf((char) value));
-			// } else {
-				//SystemProperties.set("sys.hdmi_screen.scale",
-				//		String.valueOf((char) 100));
-			//}
-		//}else {
-			HdmiScaleTask hdmiScaleTask=new HdmiScaleTask();
-			hdmiScaleTask.execute(value);
-		//}
-
+	protected void setHdmiScreenScale(int value) {
+		/*if (mDisplayFlag != 0)
+			mDisplayManagement.setOverScan(mDisplayManagement.AUX_DISPLAY, mDisplayManagement.DISPLAY_OVERSCAN_ALL, value);
+		else
+			mDisplayManagement.setOverScan(mDisplayManagement.MAIN_DISPLAY, mDisplayManagement.DISPLAY_OVERSCAN_ALL,value);*/
+		if(mScaleTask != null && mScaleTask.getStatus() == Status.RUNNING)
+			mScaleTask.cancel(true);
+		mScaleTask =new HdmiScaleTask();
+		mScaleTask.execute(value);
 	}
-
-	private boolean isHdmiConnected(File file) {
-		boolean isConnected = false;
-		if (file.exists()) {
-			try {
-				FileReader fread = new FileReader(file);
-				BufferedReader buffer = new BufferedReader(fread);
-				String strPlug = "plug=1";
-				String str = null;
-				while ((str = buffer.readLine()) != null) {
-					int length = str.length();
-					// if((length == 6) && (str.equals(strPlug))){
-					if (str.equals("1")) {
-						isConnected = true;
-						break;
-					} else {
-						isConnected = false;
-					}
-				}
-			} catch (IOException e) {
-				Log.e(TAG, "IO Exception");
-			}
-		}
-		return isConnected;
-	}
-
+	
 
 	@Override
 	protected void onBindDialogView(View view) {
 		super.onBindDialogView(view);
-		
-		if(isRK3128()){
-		   HdmiScale = new File("/sys/class/display/HDMI/scale");//3128使用	
-		}else{
-		   HdmiScale = new File("/sys/class/graphics/fb0/scale");
-		}
-
-		mFlag = false;
 		mSeekBar = getSeekBar(view);
-		// resotre value
-		SharedPreferences preferences = context.getSharedPreferences(
-				"HdmiSettings", context.MODE_PRIVATE);
-
+		mSeekBar.setMax(MAXIMUN_SCREEN_SCALE);
 		Rect overscan;
 		if(mDisplayManagement != null){
-			if (mDisplayManagement.getDisplayNumber() == 2)
+			if (mDisplayFlag != 0)
 				overscan = mDisplayManagement.getOverScan(mDisplayManagement.AUX_DISPLAY);
 			else
 				overscan = mDisplayManagement.getOverScan(mDisplayManagement.MAIN_DISPLAY);
 			mOldScale = overscan.left - 80;
-		}else{
-			mOldScale = Integer.valueOf(preferences.getString("scale_set", "100"));
-			mOldScale = mOldScale - 80;
+			mOldOverScan = overscan;
 		}
-		
-
+		if(mOldScale < 0)
+			mOldScale = 0;
 		mSeekBar.setProgress(mOldScale);
 		mSeekBar.setOnSeekBarChangeListener(this);
 	}
@@ -169,21 +125,15 @@ public class HdmiScreenZoomPreference extends SeekBarDialogPreference implements
 		if (mValue > 100) {
 			mValue = 100;
 		}
-		setHdmiScreenScale(HdmiScale, mValue);
+		setHdmiScreenScale(mValue);
 	}
 
 	public void onStartTrackingTouch(SeekBar seekBar) {
 		// If start tracking, record the initial position
-		mFlag = true;
-		mRestoreValue = seekBar.getProgress();
 	}
 
 	public void onStopTrackingTouch(SeekBar seekBar) {
-		setHdmiScreenScale(HdmiScale, mValue);
-	}
-
-	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
+		setHdmiScreenScale(mValue);
 	}
 
 	@Override
@@ -193,22 +143,16 @@ public class HdmiScreenZoomPreference extends SeekBarDialogPreference implements
 
 		if (positiveResult) {
 			int value = mSeekBar.getProgress() + 80;
-			setHdmiScreenScale(HdmiScale, value);
+			setHdmiScreenScale(value);
 			//editor.putString("scale_set", String.valueOf(value));
 		} else {
-			if (mFlag) {
-				mRestoreValue = mRestoreValue + 80;
-				if (mRestoreValue > 100) {
-					mRestoreValue = 100;
-				}
-				setHdmiScreenScale(HdmiScale, mRestoreValue);
-				//editor.putString("scale_set", String.valueOf(mRestoreValue));
-			} else {
-				// click cancel without any other operations
-				int value = mSeekBar.getProgress() + 80;
-				setHdmiScreenScale(HdmiScale, value);
-				//editor.putString("scale_set", String.valueOf(value));
-			}
+			String overscan = "overscan "+mOldOverScan.left+","+mOldOverScan.top+","+mOldOverScan.right+","+mOldOverScan.bottom;
+			//Log.d("xzj","---scale value= "+value+" overscan = "+overscan);
+			if(mDisplayFlag == 0)
+				SystemProperties.set("persist.sys.overscan.main",overscan);
+			else
+				SystemProperties.set("persist.sys.overscan.aux",overscan);
+			
 		}
 		//editor.commit();
 	}
@@ -217,47 +161,20 @@ public class HdmiScreenZoomPreference extends SeekBarDialogPreference implements
 
 		@Override
 		protected Void doInBackground(Integer... params) {
-			// TODO Auto-generated method stub
 			int value = params[0];
-			if(mDisplayManagement != null){
-				if (mDisplayManagement.getDisplayNumber() == 2)
-					mDisplayManagement.setOverScan(mDisplayManagement.AUX_DISPLAY,
-								       mDisplayManagement.DISPLAY_OVERSCAN_ALL,
-								       value);
-				else
-					mDisplayManagement.setOverScan(mDisplayManagement.MAIN_DISPLAY,
-								       mDisplayManagement.DISPLAY_OVERSCAN_ALL,
-								       value);
-			}else{	
-				String s = String.valueOf(params[0]);		
-				String overscan = "overscan "+value+","+value+","+value+","+value;
-				//Log.d("xzj","---scale value= "+value+" overscan = "+overscan);
-
-				SystemProperties.set("persist.sys.overscan.main",overscan);
-				preferences.edit().putString("scale_set", s).commit();
-			}
+			if (mDisplayFlag != 0)
+				mDisplayManagement.setOverScan(mDisplayManagement.AUX_DISPLAY, mDisplayManagement.DISPLAY_OVERSCAN_ALL, value);
+			else
+				mDisplayManagement.setOverScan(mDisplayManagement.MAIN_DISPLAY, mDisplayManagement.DISPLAY_OVERSCAN_ALL,value);
 			return null;
 
 		}
 		
 	}
 	
-	private boolean isRK3128() {
-    	final String RK3128 = "RK3128";
-	try{
-	   FileReader fr = new FileReader("/proc/cpuinfo");
-           BufferedReader br = new BufferedReader(fr);
-           String str;
-           while((str = br.readLine()) != null) {
-        	if (str.contains(RK3128)) {
-		    return true;
-		}
-           }	
-	}catch(Exception e){
-		return false;
+	public void setDisplayFlag(int displayFlag){
+		mDisplayFlag = displayFlag;
 	}
-        return false;
-    }
 
 	
 }
