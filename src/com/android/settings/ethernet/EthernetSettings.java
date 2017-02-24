@@ -40,7 +40,10 @@ import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceScreen;
-import android.preference.SwitchPreference;
+//import android.preference.SwitchPreference;
+//import android.support.v14.preference.SwitchPreference;
+import android.preference.ListPreference;
+//import android.support.v7.preference.Preference;
 import android.provider.SearchIndexableResource;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -58,6 +61,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener; 
 import com.android.settings.SettingsPreferenceFragment.SettingsDialogFragment;
 
 /*for 5.0*/
@@ -72,13 +76,14 @@ import android.net.StaticIpConfiguration;
 import android.net.NetworkUtils;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
-import android.preference.ListPreference;
+//import android.preference.ListPreference;
 import com.android.internal.logging.MetricsLogger;
 
 import com.android.settings.ethernet_static_ip_dialog;
+import com.android.settings.pppoe_dialog;
 
 public class EthernetSettings extends SettingsPreferenceFragment 
-			implements DialogInterface.OnClickListener ,OnPreferenceChangeListener {
+			implements DialogInterface.OnClickListener ,Preference.OnPreferenceChangeListener {
     private static final String TAG = "EthernetSettings";
     
     private static final String KEY_ETH_IP_ADDRESS = "ethernet_ip_addr";
@@ -96,10 +101,12 @@ public class EthernetSettings extends SettingsPreferenceFragment
     private  static String mEthGateway = null;
     private  static String mEthdns1 = null;
     private  static String mEthdns2 = null;
+    private  static String mPppoeUname = null;
+    private  static String mPppoePassword = null;
     private final static String nullIpInfo = "0.0.0.0";
 
     private ListPreference mkeyEthMode;
-    private SwitchPreference mEthCheckBox;
+//    private SwitchPreference mEthCheckBox;
     private CheckBoxPreference staticEthernet;
 	
     private final IntentFilter mIntentFilter;
@@ -107,8 +114,13 @@ public class EthernetSettings extends SettingsPreferenceFragment
     EthernetManager mEthManager;
     StaticIpConfiguration mStaticIpConfiguration;
     Context mContext;
-    private ethernet_static_ip_dialog mDialog;
-    private static final int SHOW_RENAME_DIALOG = 0;  
+    private ethernet_static_ip_dialog mStaticDialog;
+    private pppoe_dialog mPppoeDialog;
+    private static final int SHOW_STATIC_DIALOG = 0; 
+    private static final int SHOW_PPPOE_DIALOG = 1; 
+    private static final int ETHER_IFACE_STATE_DOWN = 0;
+    private static final int ETHER_IFACE_STATE_UP = 1; 
+    private static int mDialogId;    
 
     @Override
     protected int getMetricsCategory() {
@@ -191,10 +203,12 @@ public class EthernetSettings extends SettingsPreferenceFragment
             mkeyEthMode=(ListPreference)findPreference(KEY_ETH_MODE);
             mkeyEthMode.setOnPreferenceChangeListener(this);
         }
-        
+    /*    
         if (mEthCheckBox== null) {
-            mEthCheckBox =  (SwitchPreference) findPreference("ethernet");
+            mEthCheckBox = (SwitchPreference) findPreference("ethernet");
+            mEthCheckBox.setOnPreferenceChangeListener(this);
         }
+    */    
         handleEtherStateChange(mEthManager.getEthernetConnectState());
         refreshUI();
         log("resume");
@@ -262,17 +276,18 @@ public class EthernetSettings extends SettingsPreferenceFragment
         	mkeyEthMode.setSummary("null");
         } else {
         	boolean useDhcp=(mEthManager.getConfiguration().ipAssignment == IpAssignment.DHCP) ? true : false;
+            boolean useStatic=(mEthManager.getConfiguration().ipAssignment == IpAssignment.STATIC) ? true : false;
         	if(useDhcp){
         		mkeyEthMode.setValue("DHCP");
         		mkeyEthMode.setSummary(R.string.usedhcp);
-        	}else {
+        	}else if(useStatic){
         		mkeyEthMode.setValue("StaticIP");
         		mkeyEthMode.setSummary(R.string.usestatic);
-        	}
-                int isEnable = mEthManager.getEthernetIfaceState();
-                if(isEnable == EthernetManager.ETHER_IFACE_STATE_UP) {
-                   mEthCheckBox.setChecked(true);   
-                }else mEthCheckBox.setChecked(false);
+        	}else{
+                mkeyEthMode.setValue("PPPoE");
+        		mkeyEthMode.setSummary(R.string.usepppoe);
+            }
+           
         }    
     }
     @Override
@@ -285,35 +300,15 @@ public class EthernetSettings extends SettingsPreferenceFragment
     	        	log("switch to dhcp");
     	     }else if(value.equals("StaticIP")){
     	        	log("static editor");       	
-    	        	this.showDialog(SHOW_RENAME_DIALOG);
-    	     }
+    	        	this.showDialog(SHOW_STATIC_DIALOG);
+    	     }else{
+                 log("pppoe editor");       	
+    	        	this.showDialog(SHOW_PPPOE_DIALOG);
+             }
     		
     	}
     	return true;
-    }
-    @Override
-    public boolean onPreferenceTreeClick(PreferenceScreen screen, Preference preference) {
-    	
-        if (preference == mEthCheckBox) {
-            boolean newState = mEthCheckBox.isChecked();
-            if(newState) {
-                log("turn on Ethernet");
-                mEthManager.setEthernetEnabled(true);   
-            } else {
-                log("turn off Ethernet");
-                mEthManager.setEthernetEnabled(false);
-            }
-            //log("IpAssignment: "+mEthManager.getConfiguration().toString());
-        }
-       /* else if(preference ==  (CheckBoxPreference) findPreference("dhcp_ethernet")) {//config dhcp
-        	mEthManager.setConfiguration(new IpConfiguration(IpAssignment.DHCP, ProxySettings.NONE,null,null));
-        	log("switch to dhcp");
-       } else if (preference ==  (CheckBoxPreference) findPreference("static_ethernet")) { //config static ip
-        	log("static editor");       	
-        	this.showDialog(SHOW_RENAME_DIALOG);
-       }*/
-        return super.onPreferenceTreeClick(screen, preference);
-    } 
+    }    
     
   //将子网掩码转换成ip子网掩码形式，比如输入32输出为255.255.255.255  
     public  String interMask2String(int prefixLength) {
@@ -404,6 +399,15 @@ public class EthernetSettings extends SettingsPreferenceFragment
 	mIpConfiguration=new IpConfiguration(IpAssignment.STATIC, ProxySettings.NONE,mStaticIpConfiguration,null);  
         return true;
     }
+    
+    private boolean setPppoeConfiguration(){
+    //    mIpConfiguration = new IpConfiguration();
+    //    mIpConfiguration.setIpAssignment(IpAssignment.PPPOE);
+        mIpConfiguration = new IpConfiguration(IpAssignment.PPPOE, ProxySettings.NONE,null,null);
+        mIpConfiguration.pppoeAccount = mPppoeUname;
+        mIpConfiguration.pppoePassword = mPppoePassword;
+        return true;
+    }
 
     public void getEthInfoFromDhcp(){	
 	String tempIpInfo;
@@ -469,6 +473,48 @@ public class EthernetSettings extends SettingsPreferenceFragment
 		mEthdns2=dnsServers.get(1).getHostAddress();
 	}		
    }
+   
+   public void getEthInfoFromPppoe(){
+    String tempIpInfo;
+	String iface = "ppp0";
+	
+	tempIpInfo = SystemProperties.get("net."+ iface +".local-ip");
+
+	if ((tempIpInfo != null) && (!tempIpInfo.equals("")) ){ 
+		mEthIpAddress = tempIpInfo;
+    	} else {  
+    		mEthIpAddress = nullIpInfo;
+    	}
+				
+	tempIpInfo = SystemProperties.get("net."+ iface +".mask");
+	if ((tempIpInfo != null) && (!tempIpInfo.equals("")) ){
+            mEthNetmask = tempIpInfo;
+    	} else {           		
+    		mEthNetmask = nullIpInfo;
+    	}
+					
+	tempIpInfo = SystemProperties.get("net."+ iface +".gw");
+	if ((tempIpInfo != null) && (!tempIpInfo.equals(""))){
+        	mEthGateway = tempIpInfo;
+    	} else {
+    		mEthGateway = nullIpInfo;        		
+    	}
+
+	tempIpInfo = SystemProperties.get("net."+ iface +".dns1");
+	if ((tempIpInfo != null) && (!tempIpInfo.equals(""))){
+           mEthdns1 = tempIpInfo;
+        } else {
+    		mEthdns1 = nullIpInfo;        		
+    	}
+        
+    tempIpInfo = SystemProperties.get("net."+ iface +".dns2");
+	if ((tempIpInfo != null) && (!tempIpInfo.equals(""))){
+           mEthdns2 = tempIpInfo;
+        } else {
+    		mEthdns2 = nullIpInfo;        		
+    	}
+        
+   }
 	/*
 	 * TODO:
 	 */
@@ -490,7 +536,10 @@ public class EthernetSettings extends SettingsPreferenceFragment
 	    * TODO: get static IP
 	   */
             getEthInfoFromStaticIp();
-	}     
+            
+	    } else{
+            getEthInfoFromPppoe();
+        }    
     }
 
     /*
@@ -502,25 +551,38 @@ public class EthernetSettings extends SettingsPreferenceFragment
     
     @Override
     public void onClick(DialogInterface dialogInterface, int button) {
-    	if(button==ethernet_static_ip_dialog.BUTTON_SUBMIT) {
-    	mDialog.saveIpSettingInfo(); //从Dialog获取静态数据  	
-    	if(setStaticIpConfiguration()) {
-            mEthManager.setConfiguration(mIpConfiguration); 	
-    	} else {
-            Log.e(TAG, mIpConfiguration.toString());
-    	}
-    	}
+    	if(button==ethernet_static_ip_dialog.BUTTON_SUBMIT &&
+                                    mDialogId == SHOW_STATIC_DIALOG) {
+    	    mStaticDialog.saveIpSettingInfo(); //从Dialog获取静态数据  	
+    	    if(setStaticIpConfiguration()) {
+                mEthManager.setConfiguration(mIpConfiguration); 	
+    	    } else {
+                Log.e(TAG, mIpConfiguration.toString());
+    	    }
+    	}else if(button==pppoe_dialog.BUTTON_SUBMIT &&
+                                   mDialogId == SHOW_PPPOE_DIALOG){
+            mPppoeDialog.savePppoeInfo();
+            if(setPppoeConfiguration()){
+                mEthManager.setConfiguration(mIpConfiguration); 
+            }else {
+                Log.e(TAG, mIpConfiguration.toString());
+    	    }
+        }
+        
     	updateCheckbox();
     }
 
     @Override
     public Dialog onCreateDialog(int dialogId) {
     	log("onCreateDialog "+dialogId);
+        mDialogId = dialogId;
     	switch(dialogId) {
-    	case SHOW_RENAME_DIALOG:	
-  
-        	mDialog = new ethernet_static_ip_dialog(getActivity(), false, this,mGetStaticIpInfo);
-        	return mDialog;
+    	case SHOW_STATIC_DIALOG:	
+        	mStaticDialog = new ethernet_static_ip_dialog(getActivity(), false, this,mGetStaticIpInfo);
+        	return mStaticDialog;
+        case SHOW_PPPOE_DIALOG:
+            mPppoeDialog = new pppoe_dialog(getActivity(), false, this, mGetStaticIpInfo);
+        	return mPppoeDialog;
     	}
     	return super.onCreateDialog(dialogId);
     }
@@ -558,6 +620,19 @@ public class EthernetSettings extends SettingsPreferenceFragment
     		log("dns2: "+dns2);
     		return true;
     	}
+        public boolean getPppoeUsername(String username) {
+            mPppoeUname = username;
+            
+            log("mPppoeUname: "+username);
+    		return true;
+        }
+        
+        public boolean getPppoePassword(String password) {
+            mPppoePassword = password;
+            
+            log("mPppoePassword: "+password);
+    		return true;
+        }
     };
    
 }

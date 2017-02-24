@@ -42,6 +42,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Button;
 
+import android.net.EthernetManager;
+
 class ethernet_static_ip_dialog extends AlertDialog implements TextWatcher {
 	
 	public getStaticIpInfo mGetStaticInfo; 
@@ -59,12 +61,15 @@ class ethernet_static_ip_dialog extends AlertDialog implements TextWatcher {
 
 	static final int BUTTON_SUBMIT = DialogInterface.BUTTON_POSITIVE;
 	static final int BUTTON_FORGET = DialogInterface.BUTTON_NEUTRAL;
+    
+    private final static String nullIpInfo = "0.0.0.0";
 
 	// private final boolean mEdit;
 	private final DialogInterface.OnClickListener mListener;
 
 	private View mView;
 	Context mcontext;
+    EthernetManager mEthManager;
 
 	// private boolean mHideSubmitButton;
 
@@ -98,6 +103,8 @@ class ethernet_static_ip_dialog extends AlertDialog implements TextWatcher {
 		setButton(BUTTON_SUBMIT, mcontext.getString(R.string.ethernet_connect), mListener);
 		setButton(BUTTON_NEGATIVE,mcontext.getString(R.string.ethernet_cancel), mListener);
 		setTitle(mcontext.getString(R.string.ethernet_settings));
+        
+        mEthManager = (EthernetManager) mcontext.getSystemService(Context.ETHERNET_SERVICE);
 
 		super.onCreate(savedInstanceState);
 	}
@@ -111,30 +118,39 @@ class ethernet_static_ip_dialog extends AlertDialog implements TextWatcher {
 	private void updateIpSettingsInfo() {
 		Log.d("blb", "Static IP status updateIpSettingsInfo");
 		ContentResolver contentResolver = mcontext.getContentResolver();
-		String staticip = System.getString(contentResolver,
-				System.ETHERNET_STATIC_IP);
+		String staticip = /*System.getString(contentResolver,System.ETHERNET_STATIC_IP);*/
+                          mEthManager.getIpAddress();
 		if (!TextUtils.isEmpty(staticip))
 			mIpAddressView.setText(staticip);
 
-		String ipmask = System.getString(contentResolver,
-				System.ETHERNET_STATIC_NETMASK);
+		String ipmask = /*System.getString(contentResolver,System.ETHERNET_STATIC_NETMASK);*/
+                        mEthManager.getNetmask();
 		if (!TextUtils.isEmpty(ipmask))
 			ipnetmask.setText(ipmask);
 
-		String gateway = System.getString(contentResolver,
-				System.ETHERNET_STATIC_GATEWAY);
+		String gateway = /*System.getString(contentResolver,System.ETHERNET_STATIC_GATEWAY);*/
+                         mEthManager.getGateway();
 		if (!TextUtils.isEmpty(gateway))
 			mIPgateway.setText(gateway);
 
-		String dns1 = System.getString(contentResolver,
-				System.ETHERNET_STATIC_DNS1);
-		if (!TextUtils.isEmpty(dns1))
-			mdns1.setText(dns1);
-
-		String dns2 = System.getString(contentResolver,
+		String dns = /*System.getString(contentResolver,System.ETHERNET_STATIC_DNS1);*/
+                      mEthManager.getDns();
+        String mDns1 = nullIpInfo;
+        String mDns2 = nullIpInfo;
+        if ((dns != null) && (!dns.equals(""))){
+            String data[] = dns.split(",");
+       		mDns1 = data[0];
+            if (data.length > 1)
+                mDns2 = data[1];
+    	}
+		if (!TextUtils.isEmpty(mDns1))
+			mdns1.setText(mDns1);
+        if (!TextUtils.isEmpty(mDns2))
+			mdns2.setText(mDns2);
+	/*	String dns2 = System.getString(contentResolver,
 				System.ETHERNET_STATIC_DNS2);
 		if (!TextUtils.isEmpty(dns2))
-			mdns2.setText(dns2);
+			mdns2.setText(dns2);*/
 	}
 
 	public void saveIpSettingInfo() {
@@ -145,38 +161,7 @@ class ethernet_static_ip_dialog extends AlertDialog implements TextWatcher {
 		String dns1 = mdns1.getText().toString();
 		String dns2 = mdns2.getText().toString();
 		int network_prefix_length = 24;// Integer.parseInt(ipnetmask.getText().toString());
-		if (!TextUtils.isEmpty(ipAddr)) { // not empty
-			System.putString(contentResolver, System.ETHERNET_STATIC_IP, ipAddr);
-		} else {
-			System.putString(contentResolver, System.ETHERNET_STATIC_IP, null);
-		}
-		if (!TextUtils.isEmpty(gateway)) { // not empty
-			System.putString(contentResolver, System.ETHERNET_STATIC_GATEWAY,
-					gateway);
-		} else {
-			System.putString(contentResolver, System.ETHERNET_STATIC_GATEWAY,
-					null);
-		}
-		if (!TextUtils.isEmpty(netMask)) { // not empty
-			System.putString(contentResolver, System.ETHERNET_STATIC_NETMASK,
-					netMask);
-		} else {
-			System.putString(contentResolver, System.ETHERNET_STATIC_NETMASK,
-					null);
-		}
-		if (!TextUtils.isEmpty(dns1)) { // not empty
-			System.putString(contentResolver, System.ETHERNET_STATIC_DNS1, dns1);
-		} else {
-			System.putString(contentResolver, System.ETHERNET_STATIC_DNS1, null);
-		}
-		if (!TextUtils.isEmpty(dns2)) { // not empty
-			System.putString(contentResolver, System.ETHERNET_STATIC_DNS2, dns2);
-		} else {
-			System.putString(contentResolver, System.ETHERNET_STATIC_DNS2, null);
-		}
-		/*
-		 * 回调传给EthernetSetting
-		 */
+
 		mGetStaticInfo.getStaticIp(ipAddr);
 		mGetStaticInfo.getStaticNetMask(netMask);
 		mGetStaticInfo.getStaticGateway(gateway);
