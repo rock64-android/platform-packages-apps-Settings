@@ -148,6 +148,9 @@ public class DisplaySettings extends SettingsPreferenceFragment implements
         if (!SystemProperties.get("ro.target.product").equals("tablet")||!SystemProperties.get("ro.board.platform").equals("rk3399")) {
             removePreference(KEY_CABC);
         }
+        if (SystemProperties.get("ro.target.product").equals("box")){
+            removePreference("wifi_display");
+        }
         if (isLiftToWakeAvailable(activity)) {
             mLiftToWakePreference = (SwitchPreference) findPreference(KEY_LIFT_TO_WAKE);
             mLiftToWakePreference.setOnPreferenceChangeListener(this);
